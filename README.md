@@ -13,6 +13,11 @@ A working Python 3.x environment and a reasonably recent version of FFmpeg avail
 OpenCV and/or libav are only required when generating test videos, not for running the tool itself.
 
 ### Usage
+```bash
+python fix_mp4.py --input <broken.mp4> --template <good.mp4> --output <result.mp4>
+```
+
+Full usage:
 
 ```text
 usage: fix_mp4.py [-h] [--input INPUT] [--template TEMPLATE] [--output OUTPUT]

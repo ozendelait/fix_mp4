@@ -468,20 +468,20 @@ def fix_mp4(prepend_bin, broken_mp4, outpath=None, verbose = True, ffmpeg_op='di
     
 def main_callable(arg0):
     parser = argparse.ArgumentParser(description="Params")
-    parser.add_argument('--input', '-i', type=str, 
-                        help="Broken mp4 file that should be fixed; if left empty, then the template extraction will be saved in <output>")
+    parser.add_argument('--input', '-i', type=str, default="",
+                        help="Broken mp4 file to be fixed; if omitted, the extracted template will be saved as <output>")
     parser.add_argument('--template', '-t', type=str,
-                        help="Working 'good' mp4 file used as template or a previously extracted template.bin file")
+                        help='Working "good" mp4 file used as template, or a previously extracted template.bin file')
     parser.add_argument('--output', '-o', type=str, default="",
-                        help="Target recovered mp4 filepath; default: <input>_fixed.mp4")
+                        help="Target path for the recovered mp4 file; default: <input>_fixed.mp4")
     parser.add_argument('--ffmpeg_op', '-f', type=str, default="direct",
-                        help="Final ffmpeg operation necessary for mp4 container creation; 'direct' for direct copy or 'reencode' for using reencoding")
+                        help='Final FFmpeg operation required for mp4 container creation; "direct" for direct copying or "reencode" for using reencoding; default: "direct"')
     parser.add_argument('--atom_start', '-a', type=str, default="esds",
-                        help="Start atom tag name expecting in template file to extract stream meta data")
+                        help="Start atom tag name expected in the template file for extracting stream metadata; default: esds")
     parser.add_argument('--skip_keyfrms', '-s', type=int, default=0,
-                        help="Drop this many keyframes at the beginning; 0 -> drop everything before the first keyframe, -1: drop nothing")
+                        help="Drop this many keyframes at the beginning; -1: drop nothing, default: 0 -> drop everything before the first keyframe")
     parser.add_argument('--verbose', '-v', action='store_true',
-                        help="displays process information usefull during debugging")
+                        help="Display process information useful for debugging")
     args = parser.parse_args(arg0)
     if len(sys.argv) < 2:
         parser.print_help()

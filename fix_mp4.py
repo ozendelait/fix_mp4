@@ -6,6 +6,7 @@
 import os
 import sys
 import struct
+import argparse
 from pathlib import Path
 
 START3 = b"\x00\x00\x01"
@@ -376,8 +377,8 @@ def gen_example_mp4(trg_dir='./example_mp4', use_fourcc=default_mp4_fourcc, use_
   
 # ffmpeg_fix: method to add mp4 container to pure m4v data part; possible are 'direct', 'reencode' and 'none'
 def fix_mp4(prepend_bin, broken_mp4, outpath=None, verbose = True, ffmpeg_op='direct', atom_start='esds', skip_keyfrms=0):
-    extract_bin = str(broken_mp4).lower() == 'none'
-    if str(outpath).lower() == 'none':
+    extract_bin = str(broken_mp4).lower() == 'none' or len(broken_mp4) == 0
+    if str(outpath).lower() == 'none' or len(outpath) == 0:
         outpath = prepend_bin[:-4]+'_extr.bin' if extract_bin else broken_mp4[:-4]+'_fixed.mp4'
     config_data = open(prepend_bin,'rb').read()
     if not prepend_bin.endswith('.bin'):
@@ -465,4 +466,27 @@ def fix_mp4(prepend_bin, broken_mp4, outpath=None, verbose = True, ffmpeg_op='di
         os.remove(tmp_path)
     return ret_val
     
-    
+def main_callable(arg0):
+    parser = argparse.ArgumentParser(description="Params")
+    parser.add_argument('--input', '-i', type=str, 
+                        help="Broken mp4 file that should be fixed; if left empty, then the template extraction will be saved in <output>")
+    parser.add_argument('--template', '-t', type=str,
+                        help="Working 'good' mp4 file used as template or a previously extracted template.bin file")
+    parser.add_argument('--output', '-o', type=str, default="",
+                        help="Target recovered mp4 filepath; default: <input>_fixed.mp4")
+    parser.add_argument('--ffmpeg_op', '-f', type=str, default="direct",
+                        help="Final ffmpeg operation necessary for mp4 container creation; 'direct' for direct copy or 'reencode' for using reencoding")
+    parser.add_argument('--atom_start', '-a', type=str, default="esds",
+                        help="Start atom tag name expecting in template file to extract stream meta data")
+    parser.add_argument('--skip_keyfrms', '-s', type=int, default=0,
+                        help="Drop this many keyframes at the beginning; 0 -> drop everything before the first keyframe, -1: drop nothing")
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help="displays process information usefull during debugging")
+    args = parser.parse_args(arg0)
+    if len(sys.argv) < 2:
+        parser.print_help()
+        return 1
+    return fix_mp4(args.template, args.input, args.output, args.verbose, ffmpeg_op=args.ffmpeg_op, atom_start=args.atom_start, skip_keyfrms=args.skip_keyfrms)
+
+if __name__ == "__main__":
+    sys.exit(main_callable(sys.argv[1:]))

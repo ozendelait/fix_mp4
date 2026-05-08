@@ -44,8 +44,10 @@ def atom_children(data, start, end):
 
 def find_start_atom(data, atom_start='esds'):
     def walk(start, end, path=""):
+        print("W", start, end, path)
         for a0, a1, typ, payload in atom_children(data, start, end):
             if typ == atom_start:
+                print(typ, payload, a1)
                 return data[payload:a1]
             if typ in {"moov", "trak", "mdia", "minf", "stbl"}:
                 r = walk(payload, a1, path + "/" + typ)
@@ -240,6 +242,8 @@ def find_box_payload(data, target):
     return data[payload:a1]
 
 def parse_avcc(avcc):
+    if avcc is None:
+        return 4, [], []
     length_size, p = (avcc[4] & 3) + 1, 5
     num_sps, sps = avcc[p] & 0x1F, []
     p += 1
@@ -379,9 +383,13 @@ def fix_mp4(prepend_bin, broken_mp4, outpath=None, verbose = True, ffmpeg_op='di
     if not prepend_bin.endswith('.bin'):
         try:
             config_data_extr = extract_working_bin(config_data, atom_start=atom_start, verbose=extract_bin) #inplace load config
+            #start_atom = find_box_payload(config_data, atom_start)
+            #config_data_extr = find_decoder_specific_info(start_atom)
+            
             if START3 + b"\x20" not in config_data_extr and verbose:
                 print("Warning: config does not appear to contain a VOL header: 00 00 01 20")
-        except:
+        except Exception as e:
+            print("First extraction failed: ", str(e))
             config_data_extr = None
         if config_data_extr is None and atom_start == "esds": #Assuming in-band SPS/PPS files
             avcc = find_box_payload(config_data, "avcC")
@@ -453,8 +461,8 @@ def fix_mp4(prepend_bin, broken_mp4, outpath=None, verbose = True, ffmpeg_op='di
         print("Recovery failed: ", e)
         ret_val = -2
 
-    #if os.path.exists(tmp_path):
-    #    os.remove(tmp_path)
+    if os.path.exists(tmp_path):
+        os.remove(tmp_path)
     return ret_val
     
     
